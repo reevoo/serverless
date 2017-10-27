@@ -1,0 +1,40 @@
+Type: AWS::KinesisFirehose::DeliveryStream
+Properties:
+  DeliveryStreamName: PurchaserLandingDBFirehose
+  DeliveryStreamType: KinesisStreamAsSource
+  KinesisStreamSourceConfiguration:
+    KinesisStreamARN:
+      Fn::Join:
+      - ''
+      - - Fn::GetAtt:
+            - PurchaserLandingStream
+            - Arn
+    RoleARN: { Fn::GetAtt: [ kinesisStreamToRedshiftRirehoseRole, Arn ] }
+  RedshiftDestinationConfiguration:
+    ClusterJDBCURL: ${self:custom.variables.LANDING_REDSHIFT_URL}
+    CopyCommand:
+      CopyOptions: "json 'auto'"
+      DataTableName: msg_purchaser
+    Username: ${self:custom.variables.LANDING_REDSHIFT_USERNAME}
+    Password: ${self:custom.variables.LANDING_REDSHIFT_PASSWORD}
+    RoleARN: { Fn::GetAtt: [ kinesisStreamToRedshiftRirehoseRole, Arn ] }
+    CloudWatchLoggingOptions:
+      Enabled: true
+      LogGroupName: FirehosesLogGroup
+      LogStreamName: FirehosesRedshiftDeliveryLogStream
+    S3Configuration:
+      BucketARN:
+        Fn::Join:
+        - ''
+        - - 'arn:aws:s3:::'
+          - Ref: ReportingWarehouseLandingDBFirehosesBucket
+      BufferingHints:
+        IntervalInSeconds: 60
+        SizeInMBs: 1
+      CompressionFormat: UNCOMPRESSED
+      Prefix: "purchaser_landing_firehose/"
+      RoleARN: { Fn::GetAtt: [ kinesisStreamToRedshiftRirehoseRole, Arn ] }
+      CloudWatchLoggingOptions:
+        Enabled: true
+        LogGroupName: FirehosesLogGroup
+        LogStreamName: FirehosesS3DeliveryLogStream

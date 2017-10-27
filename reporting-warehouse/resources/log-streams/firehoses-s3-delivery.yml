@@ -1,0 +1,4 @@
+Type: "AWS::Logs::LogStream"
+Properties:
+  LogGroupName: FirehosesLogGroup
+  LogStreamName: FirehosesS3DeliveryLogStream

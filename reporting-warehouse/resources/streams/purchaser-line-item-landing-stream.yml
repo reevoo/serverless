@@ -1,0 +1,4 @@
+Type: AWS::Kinesis::Stream
+Properties:
+  Name: PurchaserLineItemLandingStream
+  ShardCount: 2

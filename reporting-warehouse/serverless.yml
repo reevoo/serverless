@@ -1,0 +1,56 @@
+service: reporting-warehouse-serverless
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  variables: ${file(env.yml):${self:custom.stage}}
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:AbortMultipartUpload
+        - s3:GetBucketLocation
+        - s3:GetObject
+        - s3:ListBucket
+        - s3:ListBucketMultipartUploads
+        - s3:PutObject
+        - logs:PutLogEvents
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - kinesis:*
+      Resource:
+        - "*"
+
+resources:
+  Resources:
+
+    ## Roles
+    kinesisStreamToRedshiftRirehoseRole: ${file(./resources/roles/kinesis-stream-to-redshift-firehose-role.yml)}
+
+    ## S3 Buckets
+    ReportingWarehouseLandingDBFirehosesBucket: ${file(./resources/s3-buckets/reporting-warehouse-landing-db-firehoses-bucket.yml)}
+
+    # Log Groups
+    FirehosesLogGroup: ${file(./resources/log-groups/firehoses-log-group.yml)}
+    FirehosesS3DeliveryLogStream: ${file(./resources/log-streams/firehoses-s3-delivery.yml)}
+    FirehosesRedshiftDeliveryLogStream: ${file(./resources/log-streams/firehoses-redshift-delivery.yml)}
+
+    ## Kinesis Streams
+    PurchaserOrderStackStream: ${file(./resources/streams/purchaser-order-stack-stream.yml)}
+    PurchaserLandingStream: ${file(./resources/streams/purchaser-landing-stream.yml)}
+    PurchaserOrderLandingStream:  ${file(./resources/streams/purchaser-order-landing-stream.yml)}
+    PurchaserLineItemLandingStream: ${file(./resources/streams/purchaser-line-item-landing-stream.yml)}
+
+    ## Kineses Delivery Firehoses
+    PurchaserOrderLandingDBFirehose: ${file(./resources/firehoses/purchaser-order-landing-firehose.yml)}
+    PurchaserLineItemLandingDBFirehose: ${file(./resources/firehoses/purchaser-line-item-landing-firehose.yml)}
+    PurchaserLandingDBFirehose: ${file(./resources/firehoses/purchaser-landing-firehose.yml)}
+
+functions:
+
+  ## Lambda functions
+  purchaser-order-events-splitter: ${file(./functions/purchaser-order-events-splitter-function/descriptor.yml)}

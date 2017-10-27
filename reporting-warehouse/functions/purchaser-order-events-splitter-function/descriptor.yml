@@ -1,0 +1,10 @@
+name: purchaser-order-events-splitter
+handler: functions/purchaser-order-events-splitter-function/index.handler
+events:
+  - stream:
+      type: kinesis
+      batchSize: 10
+      arn:
+        Fn::GetAtt:
+          - PurchaserOrderStackStream
+          - Arn

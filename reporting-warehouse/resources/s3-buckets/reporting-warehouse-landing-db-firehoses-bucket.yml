@@ -1,0 +1,4 @@
+Type: AWS::S3::Bucket
+DeletionPolicy: Delete
+Properties:
+  BucketName: reporting-warehouse-landing-db-firehose-bucket
