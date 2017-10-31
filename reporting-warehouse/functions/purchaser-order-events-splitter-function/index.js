@@ -1,10 +1,8 @@
-'use strict';
-
 const AWS = require('aws-sdk');
 
 const kinesis = new AWS.Kinesis({region: 'us-east-1'});
 
-exports.handler = (event, context, callback) => {
+export const handler = (event, context, callback) => {
   event.Records.forEach((record) => {
     console.log('Received record: ', record);
     const fatPurchaserOrderEvent = new Buffer(record.kinesis.data, 'base64').toString('ascii');
@@ -20,12 +18,14 @@ exports.handler = (event, context, callback) => {
 
 function extractAndPublishPurchaserOrderEntityEvent(jsonData) {
   const purchaserOrderEntity = {
-    message_offset: jsonData.meta.message_offset,
+    message_uuid: jsonData.meta.message_uuid,
     message_created_at: jsonData.meta.message_created_at,
     message_operation: jsonData.meta.message_operation,
     message_backtrace: jsonData.meta.message_backtrace,
-    uuid: jsonData.payload.uuid,
+    entity_uuid: jsonData.payload.uuid,
     created_at: jsonData.payload.created_at,
+    order_reference: jsonData.payload.order_reference,
+    purchaser_reference: jsonData.payload.purchaser_reference,
     purchaser_uuid: jsonData.payload.purchaser.uuid,
     organisation_uuid: jsonData.payload.organisation.uuid,
     processed_purchaser_feed_uuid: jsonData.payload.purchaser_feed.uuid
@@ -35,16 +35,17 @@ function extractAndPublishPurchaserOrderEntityEvent(jsonData) {
 
 function extractAndPublishPurchaserLineItemsEntityEvents(jsonData) {
   const purchaser_line_items = jsonData.payload.purchaser_line_items;
-  purchaser_line_items.forEach((pli,index) => {
+  purchaser_line_items.forEach((pli) => {
     const purchaserLineItem = {
-      message_offset: jsonData.meta.message_offset,
+      message_uuid: jsonData.meta.message_uuid,
       message_created_at: jsonData.meta.message_created_at,
       message_operation: jsonData.meta.message_operation,
       message_backtrace: jsonData.meta.message_backtrace,
-      uuid: pli.uuid,
-      created_at: jsonData.payload.created_at,
+      entity_uuid: pli.uuid,
+      created_at: pli.created_at,
       product_uuid: pli.product.uuid,
-      purchaser_order_uuid: jsonData.payload.uuid
+      purchaser_order_uuid: jsonData.payload.uuid,
+      metadata: pli.metadata
     };
     putRecord(purchaserLineItem, 'PurchaserLineItemLandingStream');
   });
@@ -52,27 +53,28 @@ function extractAndPublishPurchaserLineItemsEntityEvents(jsonData) {
 
 function extractAndPublishPurchaserEvent(jsonData) {
   const purchaserOrderEntity = {
-    message_offset: jsonData.meta.message_offset,
+    message_uuid: jsonData.meta.message_uuid,
     message_created_at: jsonData.meta.message_created_at,
     message_operation: jsonData.meta.message_operation,
     message_backtrace: jsonData.meta.message_backtrace,
-    uuid: jsonData.payload.purchaser.uuid,
-    created_at: jsonData.payload.created_at,
-    is_unsubscribed: false,
-    country_name: jsonData.payload.purchaser.country_code,
-    partial_postcode: 'SW1'
+    entity_uuid: jsonData.payload.purchaser.uuid,
+    created_at: jsonData.payload.purchaser.created_at,
+    updated_at: jsonData.payload.purchaser.updated_at,
+    is_unsubscribed: jsonData.payload.purchaser.is_unsubscribed,
+    country_name: jsonData.payload.purchaser.country_name,
+    partial_postcode: jsonData.payload.purchaser.partial_postcode
   };
   putRecord(purchaserOrderEntity, 'PurchaserLandingStream');
 }
 
 function putRecord(jsonPayload, streamName) {
-  var params = {
+  const params = {
     Data: JSON.stringify(jsonPayload),
     PartitionKey: 'MyPartitionKey',
     StreamName: streamName
   };
-  kinesis.putRecord(params, function(err, data) {
+  kinesis.putRecord(params, function(err) {
     if (err) console.log(err, err.stack); // an error occurred
-    else console.log("SUCCESS: " + data); // successful response
+    else console.log("SUCCESSsss"); // successful response
   });
 }

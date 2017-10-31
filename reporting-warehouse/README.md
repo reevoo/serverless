@@ -55,6 +55,13 @@ Specifically this serverless application creates/updates all of the following re
     ```
         cp env.yml.example env.yml
     ```
+
+4. Install all the needed npm packages in the project.
+
+    ```
+        npm install
+    ```
+
 ### Deployment
 
 To deploy the serverless application, just issue the following command:

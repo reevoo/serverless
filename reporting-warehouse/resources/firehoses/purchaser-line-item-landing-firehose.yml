@@ -14,7 +14,7 @@ Properties:
     ClusterJDBCURL: ${self:custom.variables.LANDING_REDSHIFT_URL}
     CopyCommand:
       CopyOptions: "json 'auto'"
-      DataTableName: msg_purchaser
+      DataTableName: msg_purchaser_line_item
     Username: ${self:custom.variables.LANDING_REDSHIFT_USERNAME}
     Password: ${self:custom.variables.LANDING_REDSHIFT_PASSWORD}
     RoleARN: { Fn::GetAtt: [ kinesisStreamToRedshiftRirehoseRole, Arn ] }

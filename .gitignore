@@ -10,3 +10,4 @@ env.yml
 .idea
 .DS_Store
 .serverless
+.webpack
